@@ -1,0 +1,32 @@
+- config:
+                 name: "短信验证码登录app"
+                 base_url: https://life-circle-t.xinchao.com/life
+                 variables:
+                   - tel: 16333323232
+
+                   - test:
+                       name: login_life_circle_app
+                       request:
+                         method: GET
+                         url: /SMSLogin
+                         params:
+                           code: 111111
+                           source: 1
+                           tel: $tel
+                       validate:
+                         - eq: [status_code, 200]
+                         - eq: [content.status.message, "成功"]
+                         - eq: [content.data.life_user_info.mobile, "16333323232"]
+                       extract:
+                         - token: content.data.token
+
+- test:
+    name: get_coin_balance
+    request:
+        headers:
+          token: $token
+        method: GET
+        url: /coin/balance
+    validate:
+        - eq: [status_code, 200]
+        - eq: [content.status.message, "成功"]

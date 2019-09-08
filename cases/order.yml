@@ -1,0 +1,74 @@
+- config:
+    name: "提交订单主流程"
+    base_url: https://life-circle-t.xinchao.com/life
+    variables:
+      - tel: 16333323232
+
+- test:
+    name: "登录app获取token"
+    request:
+        method: GET
+        url: /SMSLogin
+        params:
+          code: 111111
+          source: 1
+          tel: $tel
+    validate:
+        - eq: [status_code, 200]
+        - eq: [content.status.message, "成功"]
+        - eq: [content.data.life_user_info.mobile, "16333323232"]
+    extract:
+      - token: content.data.token
+
+- test:
+    name: "获取当前投放城市，北京为例"
+    request:
+        method: GET
+        url: /city/list
+    validate:
+        - eq: [status_code, 200]
+        - eq: [content.status.message, "成功"]
+        - eq: [content.data.0.bdCityId, "131"]
+        - eq: [content.data.0.name, "北京市"]
+    extract:
+      - bidType: content.data.0.bidType
+        cityCode: content.data.0.cityCode
+
+- test:
+    name: "根据ID获取优惠券信息"
+    request:
+      headers:
+        token: $token
+      method: GET
+      url: /coupon/entity/{couponNo}
+      params:
+        couponNo: 1
+    validate:
+        - eq: [status_code, 200]
+
+- test:
+    name: "提交订单"
+    request:
+      headers:
+        token: $token
+      method: POST
+      url: /v2/order/submit
+      json:
+        materials:
+          - {imageDownId: '1654', duration: 3, videoUpId: '1675'}
+        screenType: 3
+        packageType: 2
+        endDate: '2019-10-21'
+        cityCode: '510100'
+        payImmediate: 0
+        bidType: 2
+        couponNo: ''
+        startDate: '2019-09-10'
+        trade: H02201
+        premiseMap: {'4249513': 1, '168308': 8, '168461': 7}
+        shqSid: '23'
+        couponDeduction: 0
+    validate:
+        - eq: [status_code, 200]
+        - eq: [content.status.message, "成功"]
+
